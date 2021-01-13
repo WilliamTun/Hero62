@@ -25,16 +25,15 @@ router.get('/', auth, async (req, res) => {
 // @desc    Authenticate User and get token
 // @access  Public
 router.post('/', [
-    check('email', 'Please include a valid email').isEmail(),
-    check('password', 'Password is required')
-    .exists()
+    check('email', 'Email is required').exists(),
+    check('password', 'Password is required').exists()
 ], async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         } 
 
-        const {email, password} = req.body
+        const {email, password} = req.body;
     
         try {
             let user = await User.findOne({ email })
@@ -46,9 +45,7 @@ router.post('/', [
             const isMatch = await bcrypt.compare(password, user.password);
 
             if(!isMatch){
-                return res 
-                    .status(400)
-                    .json({ errors: [{ msg: "Invalid Credentials" }]})
+                res.status(400).json({ errors: [{ msg: "Invalid Credentials" }]})
             }
 
             const payload = {
@@ -59,7 +56,7 @@ router.post('/', [
 
             jwt.sign(
                 payload, 
-                config.get('jwtToken'),
+                config.get('jwtSecret'),
                 { expiresIn: 36000 },
                 (err, token) => {
                     if(err) throw err;
